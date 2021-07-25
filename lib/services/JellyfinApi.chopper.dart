@@ -194,6 +194,15 @@ class _$JellyfinApi extends JellyfinApi {
   }
 
   @override
+  Future<Response<dynamic>> removeItemsFromPlaylist(
+      {required String playlistId, required String ids}) {
+    final $url = '/Playlists/$playlistId/Items?EntryIds=$ids';
+    final $request = Request('DELETE', $url, client.baseUrl);
+    return client.send<dynamic, dynamic>($request,
+        requestConverter: JsonConverter.requestFactory);
+  }
+
+  @override
   Future<dynamic> getAlbumArtists(
       {String? includeItemTypes,
       String? parentId,
