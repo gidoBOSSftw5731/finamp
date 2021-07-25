@@ -17,6 +17,7 @@ enum SongListTileMenuItems {
   AddToQueue,
   AddToPlaylist,
   GoToAlbum,
+  RemoveFromPlaylist,
 }
 
 class SongListTile extends StatefulWidget {
@@ -96,6 +97,8 @@ class _SongListTileState extends State<SongListTile> {
       onLongPressStart: (details) async {
         Feedback.forLongPress(context);
 
+        final isInPlaylist = widget.item.parentId != widget.parentId;
+
         // This horrible check does 2 things:
         //  - Checks if the item's parent is not the same as the parent item
         //    that created the widget. The ids will be different if the
@@ -107,8 +110,8 @@ class _SongListTileState extends State<SongListTile> {
         //    offline mode, we need the album to actually be downloaded to show
         //    its metadata. This function also checks if widget.item.parentId is
         //    null.
-        final canGoToAlbum = widget.item.parentId != widget.parentId &&
-            _isAlbumDownloadedIfOffline(widget.item.parentId);
+        final canGoToAlbum =
+            isInPlaylist && _isAlbumDownloadedIfOffline(widget.item.parentId);
 
         // Some options are disabled in offline mode
         final isOffline = FinampSettingsHelper.finampSettings.isOffline;
@@ -147,6 +150,15 @@ class _SongListTileState extends State<SongListTile> {
                 enabled: canGoToAlbum,
               ),
             ),
+            PopupMenuItem<SongListTileMenuItems>(
+              enabled: isInPlaylist && !isOffline,
+              value: SongListTileMenuItems.RemoveFromPlaylist,
+              child: ListTile(
+                leading: Icon(Icons.album),
+                title: Text("Remove From Playlist"),
+                enabled: isInPlaylist && !isOffline,
+              ),
+            ),
           ],
         );
 
@@ -160,6 +172,25 @@ class _SongListTileState extends State<SongListTile> {
           case SongListTileMenuItems.AddToPlaylist:
             Navigator.of(context)
                 .pushNamed("/music/addtoplaylist", arguments: widget.item);
+            break;
+
+          case SongListTileMenuItems.RemoveFromPlaylist:
+            // This should only be called when online, I'm not aware
+            // of a way to remove from playlist while offline
+            // but this is my first look at this project so someone
+            // is free to correct me
+            // Because we know we're online, there's no check for that, just
+            // a try-catch for safety
+
+            try {
+              final jellyfinApiData = GetIt.instance<JellyfinApiData>();
+              jellyfinApiData.removeItemfromPlaylist(
+                playlistId: widget.parentId ?? "",
+                id: widget.item.playlistItemId ?? "",
+              );
+            } catch (e) {
+              errorSnackbar(e, context);
+            }
             break;
 
           case SongListTileMenuItems.GoToAlbum:

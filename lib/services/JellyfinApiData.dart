@@ -312,6 +312,23 @@ class JellyfinApiData {
     }
   }
 
+  Future<void> removeItemfromPlaylist({
+    /// The playlist id.
+    required String playlistId,
+
+    /// Item ids to add.
+    required String id,
+  }) async {
+    final Response response = await jellyfinApi.removeItemFromPlaylist(
+      playlistId: playlistId,
+      id: id,
+    );
+
+    if (!response.isSuccessful) {
+      return Future.error(response);
+    }
+  }
+
   /// Updates an item.
   Future<void> updateItem({
     /// The item id.
